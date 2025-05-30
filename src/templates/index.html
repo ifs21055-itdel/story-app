@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Share your amazing stories with the world"
+    />
+    <meta name="theme-color" content="#0d6efd" />
+
+    <!-- PWA Meta Tags -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="Dicoding Story" />
+    <meta name="mobile-web-app-capable" content="yes" />
+
+    <!-- Web App Manifest -->
+    <link rel="manifest" href="/manifest.json" />
+
+    <!-- Apple Touch Icons -->
+    <link
+      rel="apple-touch-icon"
+      sizes="152x152"
+      href="/icons/icon-152x152.png"
+    />
+    <link
+      rel="apple-touch-icon"
+      sizes="192x192"
+      href="/icons/icon-192x192.png"
+    />
+
+    <!-- Favicon -->
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="32x32"
+      href="/icons/icon-32x32.png"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="16x16"
+      href="/icons/icon-16x16.png"
+    />
+
+    <title>Dicoding Story App</title>
+
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    />
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <!-- Skip to content for accessibility -->
+    <a href="#main-content" class="skip-link">Skip to content</a>
+
+    <!-- App Shell - Static Content -->
+    <header>
+      <nav id="navbar" aria-label="Main Navigation">
+        <h1 class="app-title">
+          <i class="fas fa-book-open" aria-hidden="true"></i>
+          <span>Dicoding Story</span>
+        </h1>
+        <ul class="nav-links">
+          <li>
+            <a href="#/home" aria-label="Go to home page"
+              ><i class="fas fa-home" aria-hidden="true"></i> Home</a
+            >
+          </li>
+          <li>
+            <a href="#/add-story" aria-label="Add new story"
+              ><i class="fas fa-plus-circle" aria-hidden="true"></i> Add
+              Story</a
+            >
+          </li>
+          <li>
+            <a href="#/login" id="login-link" aria-label="Login to your account"
+              ><i class="fas fa-sign-in-alt" aria-hidden="true"></i> Login</a
+            >
+          </li>
+          <li>
+            <a
+              href="#/register"
+              id="register-link"
+              aria-label="Create new account"
+              ><i class="fas fa-user-plus" aria-hidden="true"></i> Register</a
+            >
+          </li>
+          <li>
+            <a
+              href="#"
+              id="logout-button"
+              style="display: none"
+              aria-label="Logout from your account"
+              ><i class="fas fa-sign-out-alt" aria-hidden="true"></i> Logout</a
+            >
+          </li>
+        </ul>
+      </nav>
+    </header>
+
+    <!-- Main content area - Dynamic Content -->
+    <main id="main-content" tabindex="-1">
+      <!-- Loading indicator -->
+      <div
+        id="loading-indicator"
+        class="loading"
+        style="display: none"
+        aria-live="polite"
+      >
+        <div class="spinner" aria-hidden="true"></div>
+        <span>Loading...</span>
+      </div>
+
+      <!-- PWA Install Prompt -->
+      <div id="install-prompt" style="display: none">
+        <div class="install-banner">
+          <div class="install-content">
+            <i class="fas fa-download"></i>
+            <span>Install Dicoding Story App for better experience!</span>
+            <button id="install-button" class="install-btn">Install</button>
+            <button id="dismiss-install" class="dismiss-btn">×</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Offline indicator -->
+      <div id="offline-indicator" style="display: none">
+        <div class="offline-banner">
+          <i class="fas fa-wifi"></i>
+          <span>You're offline. Some features may be limited.</span>
+        </div>
+      </div>
+
+      <!-- Content will be dynamically loaded here -->
+      <div id="page-container"></div>
+    </main>
+
+    <!-- Footer - Static Content -->
+    <footer>
+      <p>
+        <i class="fas fa-heart" style="color: #ffee00" aria-hidden="true"></i>
+        &copy; 2025 Dicoding Story App - Gerry Bukit
+      </p>
+    </footer>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script type="module" src="/src/scripts/index.js"></script>
+
+    <script>
+      // Register Service Worker
+      // Register Service Worker - IMPROVED VERSION
+      if ("serviceWorker" in navigator) {
+        window.addEventListener("load", async () => {
+          try {
+            // Unregister existing service workers first (for debugging)
+            const registrations =
+              await navigator.serviceWorker.getRegistrations();
+
+            // Optional: Uncomment this line if you want to clean slate
+            // await Promise.all(registrations.map(reg => reg.unregister()));
+
+            const registration = await navigator.serviceWorker.register(
+              "/service-worker.js",
+              {
+                scope: "/",
+                updateViaCache: "none", // Disable caching of SW file
+              }
+            );
+
+            console.log("SW registered successfully:", registration);
+
+            // Handle service worker updates
+            registration.addEventListener("updatefound", () => {
+              const newWorker = registration.installing;
+              console.log("New service worker found");
+
+              newWorker.addEventListener("statechange", () => {
+                if (
+                  newWorker.state === "installed" &&
+                  navigator.serviceWorker.controller
+                ) {
+                  // New service worker is available
+                  console.log(
+                    "New service worker installed, consider refreshing"
+                  );
+
+                  // Optional: Show update notification to user
+                  // You can implement a banner to ask user to refresh
+                }
+              });
+            });
+
+            // Listen for messages from service worker
+            navigator.serviceWorker.addEventListener("message", (event) => {
+              console.log("Message from SW:", event.data);
+            });
+          } catch (error) {
+            console.error("SW registration failed:", error);
+          }
+        });
+
+        // Handle service worker controller changes
+        navigator.serviceWorker.addEventListener("controllerchange", () => {
+          console.log("Service worker controller changed");
+          // Only reload if we're not in the middle of a navigation
+          if (!window.location.hash.includes("#")) {
+            window.location.reload();
+          }
+        });
+      }
+
+      // PWA Install Prompt - IMPROVED VERSION
+      let deferredPrompt;
+      let installPromptShown = false;
+      const installPrompt = document.getElementById("install-prompt");
+      const installButton = document.getElementById("install-button");
+      const dismissButton = document.getElementById("dismiss-install");
+
+      // Function to show install prompt manually (fallback)
+      function showInstallPrompt() {
+        if (installPrompt && !installPromptShown) {
+          installPrompt.style.display = "block";
+          installPromptShown = true;
+          console.log("Install prompt shown manually");
+        }
+      }
+
+      // Function to hide install prompt
+      function hideInstallPrompt() {
+        if (installPrompt) {
+          installPrompt.style.display = "none";
+          installPromptShown = false;
+        }
+      }
+
+      // Listen for beforeinstallprompt event
+      window.addEventListener("beforeinstallprompt", (e) => {
+        console.log("beforeinstallprompt event fired");
+        // Prevent Chrome 67 and earlier from automatically showing the prompt
+        e.preventDefault();
+        // Stash the event so it can be triggered later
+        deferredPrompt = e;
+        // Show install prompt
+        showInstallPrompt();
+      });
+
+      // Install button click handler
+      if (installButton) {
+        installButton.addEventListener("click", async () => {
+          console.log("Install button clicked");
+
+          if (deferredPrompt) {
+            // Show the install prompt
+            deferredPrompt.prompt();
+            // Wait for the user to respond to the prompt
+            const { outcome } = await deferredPrompt.userChoice;
+            console.log(`User response to the install prompt: ${outcome}`);
+            // Clear the deferredPrompt
+            deferredPrompt = null;
+            hideInstallPrompt();
+          } else {
+            // Fallback: try to show browser's install option
+            console.log("No deferred prompt available");
+            alert(
+              "To install this app:\n\n1. Click the browser menu (⋮)\n2. Select 'Install app' or 'Add to Home Screen'"
+            );
+          }
+        });
+      }
+
+      // Dismiss button click handler
+      if (dismissButton) {
+        dismissButton.addEventListener("click", () => {
+          console.log("Install prompt dismissed");
+          hideInstallPrompt();
+          deferredPrompt = null;
+          // Remember user dismissed (optional)
+          localStorage.setItem("installPromptDismissed", Date.now());
+        });
+      }
+
+      // Handle app installed
+      window.addEventListener("appinstalled", (e) => {
+        console.log("PWA was installed");
+        hideInstallPrompt();
+        deferredPrompt = null;
+      });
+
+      // Check if app is already installed (standalone mode)
+      function isAppInstalled() {
+        return (
+          window.matchMedia("(display-mode: standalone)").matches ||
+          window.navigator.standalone === true
+        );
+      }
+
+      // Alternative method to show install button
+      function checkInstallability() {
+        // Don't show if already installed
+        if (isAppInstalled()) {
+          console.log("App is already installed");
+          return;
+        }
+
+        // Don't show if recently dismissed (within 7 days)
+        const lastDismissed = localStorage.getItem("installPromptDismissed");
+        if (
+          lastDismissed &&
+          Date.now() - parseInt(lastDismissed) < 7 * 24 * 60 * 60 * 1000
+        ) {
+          console.log("Install prompt was recently dismissed");
+          return;
+        }
+
+        // Check basic PWA requirements
+        if ("serviceWorker" in navigator && "caches" in window) {
+          // Show install prompt after a delay if beforeinstallprompt doesn't fire
+          setTimeout(() => {
+            if (!installPromptShown && !deferredPrompt) {
+              console.log("Showing install prompt as fallback");
+              showInstallPrompt();
+            }
+          }, 3000); // Show after 3 seconds
+        }
+      }
+
+      // Online/Offline Status
+      const offlineIndicator = document.getElementById("offline-indicator");
+
+      function updateOnlineStatus() {
+        if (navigator.onLine) {
+          if (offlineIndicator) offlineIndicator.style.display = "none";
+        } else {
+          if (offlineIndicator) offlineIndicator.style.display = "block";
+        }
+      }
+
+      window.addEventListener("online", updateOnlineStatus);
+      window.addEventListener("offline", updateOnlineStatus);
+
+      // Initial setup when DOM is loaded
+      document.addEventListener("DOMContentLoaded", () => {
+        // Update online status
+        updateOnlineStatus();
+
+        // Check installability after a short delay
+        setTimeout(checkInstallability, 1000);
+
+        // Skip to content functionality
+        const mainContent = document.querySelector("#main-content");
+        const skipLink = document.querySelector(".skip-link");
+
+        if (mainContent && skipLink) {
+          skipLink.addEventListener("click", function (event) {
+            event.preventDefault();
+            skipLink.blur();
+            mainContent.focus();
+            mainContent.scrollIntoView({ behavior: "smooth" });
+          });
+        }
+
+        // Redirect to default route if no hash
+        if (!location.hash) {
+          location.hash = "#/home";
+        }
+      });
+
+      // Debug function (remove in production)
+      window.debugPWA = function () {
+        console.log("=== PWA Debug Info ===");
+        console.log("Service Worker supported:", "serviceWorker" in navigator);
+        console.log("Install prompt shown:", installPromptShown);
+        console.log("Deferred prompt available:", !!deferredPrompt);
+        console.log("App installed:", isAppInstalled());
+        console.log("Online:", navigator.onLine);
+
+        if ("serviceWorker" in navigator) {
+          navigator.serviceWorker.getRegistrations().then((registrations) => {
+            console.log("SW Registrations:", registrations.length);
+          });
+        }
+      };
+    </script>
+  </body>
+</html>
